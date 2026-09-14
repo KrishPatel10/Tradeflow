@@ -1,0 +1,9 @@
+.git
+.tooling
+.pnpm-store
+**/node_modules
+**/.angular
+**/dist
+**/target
+**/coverage
+.env

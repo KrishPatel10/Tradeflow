@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tradeflow}
+    username: ${DB_USERNAME:tradeflow}
+    password: ${DB_PASSWORD:tradeflow-local}
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 500ms
+      timeout: 500ms
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.block.ms: 2000
+    consumer:
+      group-id: tradeflow-notifications
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} level=%-5level application=${spring.application.name} correlationId=%X{correlationId:-none} logger=%logger{36} message=\"%replace(%msg){'\"','\\\"'}\"%n"
+
+tradeflow:
+  bootstrap:
+    admin:
+      email: ${TRADEFLOW_ADMIN_EMAIL:}
+      password: ${TRADEFLOW_ADMIN_PASSWORD:}
+  cache:
+    enabled: ${CACHE_ENABLED:true}
+    account-ttl: PT30S
+    user-ttl: PT5M
+  kafka:
+    publisher-enabled: ${KAFKA_ENABLED:true}
+    topic: ${TRANSFER_TOPIC:tradeflow.transfer-completed.v1}
+    publish-delay: 2s
+    max-attempts: 10
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dHJhZGVmbG93LWxvY2FsLWRldmVsb3BtZW50LXNlY3JldC0zMi1ieXRlcw==}
+      access-token-ttl: PT15M
+      refresh-token-ttl: P7D

@@ -1,0 +1,49 @@
+groups:
+  - name: tradeflow
+    rules:
+      - alert: TradeFlowBackendDown
+        expr: up{job="tradeflow-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: TradeFlow backend is not being scraped
+          description: Prometheus has been unable to scrape the TradeFlow backend for one minute.
+      - alert: TradeFlowTransferErrors
+        expr: increase(tradeflow_transfers_total{result="error"}[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: A transfer failed unexpectedly
+          description: At least one transfer ended in an internal error during the last five minutes.
+      - alert: TradeFlowOutboxBacklog
+        expr: tradeflow_outbox_events{status="pending"} > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Transactional outbox backlog is growing
+          description: More than 50 committed events have remained pending for five minutes.
+      - alert: TradeFlowDeadOutboxEvent
+        expr: tradeflow_outbox_events{status="dead"} > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: An outbox event exhausted all retries
+          description: One or more committed events require operator intervention.
+      - alert: TradeFlowRedisFallback
+        expr: increase(tradeflow_cache_errors_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: TradeFlow is falling back from Redis
+          description: Cache operations are failing; PostgreSQL remains authoritative but read latency may increase.
+      - alert: TradeFlowKafkaConsumerLag
+        expr: max(kafka_consumer_fetch_manager_records_lag_max) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Kafka notification consumer is lagging
+          description: Maximum consumer lag has exceeded 100 records for five minutes.

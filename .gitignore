@@ -1,0 +1,29 @@
+# Local configuration and secrets
+.env
+*.local
+
+# Java / Maven
+**/target/
+*.class
+
+# Node / Angular
+**/node_modules/
+**/dist/
+.angular/
+.corepack-cache/
+.pnpm-home/
+.pnpm-store/
+.docker-config/
+.tooling/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and test output
+*.log
+coverage/
+test-results/

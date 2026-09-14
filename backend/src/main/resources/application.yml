@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: tradeflow-backend
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+server:
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        tradeflow.transfer.duration: true
+
+info:
+  application:
+    name: TradeFlow
+    description: Reliable money transfer platform

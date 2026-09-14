@@ -1,0 +1,83 @@
+<div class="auth-page" *ngIf="!auth.authenticated(); else workspace">
+  <section class="auth-story">
+    <a class="brand" href="/" aria-label="TradeFlow home"><img class="brand-mark" src="tradeflow-mark.svg" alt=""><span>TradeFlow</span></a>
+    <div><p class="eyebrow">Reliable by design</p><h1>Move money with confidence.</h1>
+      <p>Atomic transfers, safe retries, real-time notifications, and an auditable history—built into one focused platform.</p></div>
+    <small>PostgreSQL source of truth · Redis acceleration · Kafka events</small>
+  </section>
+  <main class="auth-panel">
+    <div class="auth-card">
+      <p class="eyebrow">Welcome to TradeFlow</p>
+      <h2>{{ mode() === 'login' ? 'Sign in to your workspace' : 'Create your account' }}</h2>
+      <p class="subtle">{{ mode() === 'login' ? 'Use your customer credentials to continue.' : 'Start with a secure personal workspace.' }}</p>
+      <p class="alert error" *ngIf="error()">{{ error() }}</p>
+      <form *ngIf="mode() === 'login'" [formGroup]="loginForm" (ngSubmit)="login()">
+        <label>Email<input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label>Password<input type="password" formControlName="password" autocomplete="current-password" placeholder="At least 8 characters"></label>
+        <button class="primary" type="submit" [disabled]="busy() || loginForm.invalid">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+      </form>
+      <form *ngIf="mode() === 'register'" [formGroup]="registerForm" (ngSubmit)="register()">
+        <div class="form-row"><label>First name<input formControlName="firstName"></label><label>Last name<input formControlName="lastName"></label></div>
+        <label>Email<input type="email" formControlName="email" autocomplete="email"></label>
+        <label>Password<input type="password" formControlName="password" autocomplete="new-password"></label>
+        <button class="primary" type="submit" [disabled]="busy() || registerForm.invalid">{{ busy() ? 'Creating…' : 'Create account' }}</button>
+      </form>
+      <button class="text-button" (click)="mode.set(mode() === 'login' ? 'register' : 'login'); error.set('')">
+        {{ mode() === 'login' ? 'New to TradeFlow? Create an account' : 'Already registered? Sign in' }}
+      </button>
+    </div>
+  </main>
+</div>
+
+<ng-template #workspace>
+  <ng-container *ngIf="user() as currentUser; else loadingWorkspace">
+  <app-admin-workspace *ngIf="currentUser.role === 'ADMIN'; else customerWorkspace" [user]="currentUser" (signedOut)="logout()"></app-admin-workspace>
+  <ng-template #customerWorkspace>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="TradeFlow home"><img class="brand-mark" src="tradeflow-mark.svg" alt=""><span>TradeFlow</span></a>
+      <nav><p class="nav-label">Workspace</p>
+        <a class="nav-item" href="#overview" [class.active]="activeSection() === 'overview'" [attr.aria-current]="activeSection() === 'overview' ? 'page' : null" (click)="selectSection('overview', $event)">Overview</a>
+        <a class="nav-item" href="#accounts" [class.active]="activeSection() === 'accounts'" [attr.aria-current]="activeSection() === 'accounts' ? 'page' : null" (click)="selectSection('accounts', $event)">Accounts</a>
+        <a class="nav-item" href="#transfer" [class.active]="activeSection() === 'transfer'" [attr.aria-current]="activeSection() === 'transfer' ? 'page' : null" (click)="selectSection('transfer', $event)">New transfer</a>
+        <a class="nav-item" href="#activity" [class.active]="activeSection() === 'activity'" [attr.aria-current]="activeSection() === 'activity' ? 'page' : null" (click)="selectSection('activity', $event)">Activity</a>
+      </nav>
+      <div class="phase-card"><span class="phase-dot"></span><div><strong>Event-driven core</strong><small>Phases 1–4 active</small></div></div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar"><div><p class="eyebrow">Customer workspace</p><h1>Welcome back, {{ user()?.firstName || 'customer' }}.</h1></div><button class="secondary" (click)="logout()">Sign out</button></header>
+      <p class="alert error" *ngIf="error()">{{ error() }}</p><p class="alert success" *ngIf="success()">{{ success() }}</p>
+
+      <section class="hero" id="overview" *ngIf="activeSection() === 'overview'"><div><span class="kicker">AVAILABLE ACROSS {{ accounts().length }} ACCOUNT{{ accounts().length === 1 ? '' : 'S' }}</span>
+        <h2>{{ accounts().length ? (accounts()[0].balance | currency:accounts()[0].currency:'symbol':'1.2-2') : 'Open your first account' }}</h2><p>Your ledger balance comes from PostgreSQL; Redis only makes safe reads faster.</p></div><span class="status-pill">● ALL SYSTEMS READY</span></section>
+
+      <section class="content-grid" [class.single]="activeSection() !== 'overview'" *ngIf="activeSection() !== 'activity'">
+        <article class="card" id="accounts" *ngIf="activeSection() === 'overview' || activeSection() === 'accounts'"><div class="section-heading"><div><p class="eyebrow">Portfolio</p><h3>Your accounts</h3></div></div>
+          <div class="account" *ngFor="let account of accounts()" (click)="loadHistory(account.id)"><div><strong>{{ account.currency }} account</strong><small>•••• {{ account.accountNumber.slice(-4) }}</small></div><b>{{ account.balance | currency:account.currency:'symbol':'1.2-2' }}</b></div>
+          <p class="empty" *ngIf="!accounts().length">No accounts yet.</p>
+          <p class="funding-note">New accounts start at zero. Funding is an audited administrator operation.</p>
+          <form class="compact-form" [formGroup]="accountForm" (ngSubmit)="createAccount()"><input formControlName="currency" aria-label="Currency"><button class="secondary" type="submit" [disabled]="busy()">Open account</button></form>
+        </article>
+
+        <article class="card" id="transfer" *ngIf="activeSection() === 'overview' || activeSection() === 'transfer'"><p class="eyebrow">Move funds</p><h3>New transfer</h3>
+          <form [formGroup]="transferForm" (ngSubmit)="sendTransfer()"><label>From<select formControlName="fromAccountId"><option value="">Select account</option><option *ngFor="let account of accounts()" [value]="account.id">{{ account.currency }} · {{ account.accountNumber.slice(-4) }} · {{ account.balance | number:'1.2-2' }}</option></select></label>
+            <label>To<select formControlName="toAccountId"><option value="">Select account</option><option *ngFor="let account of accounts()" [value]="account.id">{{ account.currency }} · {{ account.accountNumber.slice(-4) }}</option></select></label>
+            <div class="form-row"><label>Amount<input type="number" step="0.01" formControlName="amount"></label><label>Currency<input formControlName="currency"></label></div>
+            <button class="primary" type="submit" [disabled]="busy() || transferForm.invalid">{{ busy() ? 'Processing…' : 'Send securely' }}</button></form>
+        </article>
+      </section>
+
+      <section class="content-grid lower" id="activity" *ngIf="activeSection() === 'overview' || activeSection() === 'activity'">
+        <article class="card"><p class="eyebrow">Ledger</p><h3>Recent transfers</h3>
+          <label *ngIf="accounts().length">Transaction account<select aria-label="Transaction account" [value]="selectedHistoryAccountId()" (change)="loadSelectedHistory($event)"><option *ngFor="let account of accounts()" [value]="account.id">{{ account.currency }} · {{ account.accountNumber.slice(-4) }}</option></select></label>
+          <div class="activity" *ngFor="let transfer of transfers()"><span class="activity-icon">↗</span><div><strong>{{ transfer.amount | currency:transfer.currency }}</strong><small>{{ transfer.completedAt | date:'medium' }}</small></div><em>{{ transfer.status }}</em></div><p class="empty" *ngIf="!transfers().length">No transfers for this account yet.</p></article>
+        <article class="card"><p class="eyebrow">Kafka stream</p><h3>Notifications</h3><div class="notice" *ngFor="let notification of notifications()"><span></span><div><strong>{{ notification.message }}</strong><small>{{ notification.createdAt | date:'short' }}</small></div></div><p class="empty" *ngIf="!notifications().length">Completed transfer notifications will appear here.</p></article>
+      </section>
+    </main>
+  </div>
+  </ng-template>
+  </ng-container>
+  <ng-template #loadingWorkspace>
+    <main class="workspace-loading" aria-live="polite">Loading your secure workspace…</main>
+  </ng-template>
+</ng-template>

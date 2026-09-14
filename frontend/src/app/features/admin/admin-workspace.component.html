@@ -1,0 +1,82 @@
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <a class="brand" href="/" aria-label="TradeFlow home">
+      <img src="tradeflow-mark.svg" alt=""><span>TradeFlow</span>
+    </a>
+    <div class="console-label">Operations console</div>
+    <nav>
+      <a class="active" href="#admin-overview">Overview</a>
+      <a href="#account-inventory">Accounts</a>
+      <a href="#fund-account">Fund account</a>
+      <a href="#audit-log">Audit log</a>
+    </nav>
+    <div class="admin-identity">
+      <span>{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</span>
+      <div><strong>{{ user.firstName }} {{ user.lastName }}</strong><small>Administrator</small></div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header>
+      <div><p class="eyebrow">Administrator workspace</p><h1>Money operations</h1>
+        <p>Review accounts, record verified funding, and trace every privileged action.</p></div>
+      <div class="header-actions"><button class="secondary" type="button" (click)="refresh()">Refresh</button><button class="secondary" type="button" (click)="signOut()">Sign out</button></div>
+    </header>
+
+    <p class="alert error" *ngIf="error()">{{ error() }}</p>
+    <p class="alert success" *ngIf="success()">{{ success() }}</p>
+
+    <section class="stats" id="admin-overview">
+      <article><span>Customer records</span><strong>{{ loading() ? '—' : totalUsers() }}</strong><small>Including administrators</small></article>
+      <article><span>Open accounts</span><strong>{{ loading() ? '—' : totalAccounts() }}</strong><small>PostgreSQL source of truth</small></article>
+      <article><span>Recent audit events</span><strong>{{ loading() ? '—' : auditRecords().length }}</strong><small>Latest privileged activity</small></article>
+    </section>
+
+    <section class="admin-grid">
+      <article class="panel accounts-panel" id="account-inventory">
+        <div class="panel-heading"><div><p class="eyebrow">Account inventory</p><h2>Customer balances</h2></div><span>{{ accounts().length }} shown</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Owner</th><th>Account</th><th>Status</th><th class="amount">Balance</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let account of accounts()">
+                <td><strong>{{ owner(account.userId) }}</strong><small>{{ account.userId.slice(0, 8) }}</small></td>
+                <td><strong>{{ account.currency }} · {{ account.accountNumber.slice(-4) }}</strong><small>{{ account.createdAt | date:'mediumDate' }}</small></td>
+                <td><span class="status">{{ account.status }}</span></td>
+                <td class="amount"><strong>{{ account.balance | currency:account.currency:'symbol':'1.2-2' }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="empty" *ngIf="!loading() && !accounts().length">No accounts have been opened yet.</p>
+      </article>
+
+      <article class="panel funding-panel" id="fund-account">
+        <p class="eyebrow">Controlled operation</p><h2>Fund an account</h2>
+        <p class="description">Record only verified deposits. Safe retries reuse the same command key until this operation succeeds.</p>
+        <form [formGroup]="fundingForm" (ngSubmit)="fund()">
+          <label>Destination account
+            <select formControlName="accountId" (change)="selectAccount()">
+              <option value="">Select an account</option>
+              <option *ngFor="let account of accounts()" [value]="account.id">{{ owner(account.userId) }} · {{ account.currency }} {{ account.accountNumber.slice(-4) }}</option>
+            </select>
+          </label>
+          <div class="form-row"><label>Amount<input type="number" step="0.01" min="0.01" formControlName="amount"></label><label>Currency<input formControlName="currency" maxlength="3"></label></div>
+          <label>Verified reference<input formControlName="reference" maxlength="100" placeholder="Deposit or settlement reference"></label>
+          <div class="warning"><span>!</span><p>This immediately credits the selected ledger account and creates an immutable funding record.</p></div>
+          <button class="primary" type="submit" [disabled]="busy() || fundingForm.invalid">{{ busy() ? 'Recording…' : 'Record funding' }}</button>
+        </form>
+      </article>
+    </section>
+
+    <section class="panel audit-panel" id="audit-log">
+      <div class="panel-heading"><div><p class="eyebrow">Immutable history</p><h2>Recent audit activity</h2></div><span>Newest first</span></div>
+      <div class="audit-row" *ngFor="let record of auditRecords()">
+        <span class="audit-icon">{{ record.action.includes('FAILED') ? '!' : '✓' }}</span>
+        <div><strong>{{ record.action.replaceAll('_', ' ') }}</strong><small>{{ record.entityType }} · {{ record.entityId.slice(0, 16) }}</small></div>
+        <time>{{ record.createdAt | date:'medium' }}</time>
+      </div>
+      <p class="empty" *ngIf="!loading() && !auditRecords().length">No audit records yet.</p>
+    </section>
+  </main>
+</div>

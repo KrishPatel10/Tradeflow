@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-labelledby="title description">
+  <title id="title">TradeFlow</title>
+  <desc id="description">Two opposing arrows representing a reliable flow of funds.</desc>
+  <rect width="40" height="40" rx="12" fill="#B8F26D"/>
+  <path d="M9.5 13.25h17" fill="none" stroke="#142019" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="m22.75 8.75 4.5 4.5-4.5 4.5" fill="none" stroke="#142019" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30.5 26.75h-17" fill="none" stroke="#142019" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="m17.25 31.25-4.5-4.5 4.5-4.5" fill="none" stroke="#142019" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="20" cy="20" r="2" fill="#142019"/>
+</svg>

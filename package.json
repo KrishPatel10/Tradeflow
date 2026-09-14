@@ -1,0 +1,17 @@
+{
+  "name": "tradeflow",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "frontend:start": "pnpm --dir frontend start",
+    "frontend:build": "pnpm --dir frontend build",
+    "frontend:test": "pnpm --dir frontend test",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
+    "e2e:stack": "node scripts/run-e2e.mjs"
+  },
+  "devDependencies": {
+    "@angular/cli": "^21.2.24",
+    "@playwright/test": "^1.63.0"
+  }
+}

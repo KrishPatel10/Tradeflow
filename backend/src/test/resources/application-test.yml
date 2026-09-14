@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tradeflow;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+tradeflow:
+  cache:
+    enabled: false
+  kafka:
+    publisher-enabled: false
+  security:
+    jwt:
+      secret: dHJhZGVmbG93LXRlc3Qtc2VjcmV0LXRoYXQtaXMtYXQtbGVhc3QtMzItYnl0ZXM=
+      access-token-ttl: PT15M
+      refresh-token-ttl: P7D
