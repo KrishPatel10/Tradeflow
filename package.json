@@ -11,7 +11,7 @@
     "e2e:stack": "node scripts/run-e2e.mjs"
   },
   "devDependencies": {
-    "@angular/cli": "^21.2.24",
+    "@angular/cli": "^22.1.8",
     "@playwright/test": "^1.63.0"
   }
 }
